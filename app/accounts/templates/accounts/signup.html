@@ -1,0 +1,14 @@
+{% load widget_tweaks %}
+<form id="signup_form" action="{% url 'auth' %}" method="post">
+    {% csrf_token %}
+    <h1>Create Account</h1>
+
+    {% render_field form.id id="signup_id" name="id" class="auth-input" type="text" placeholder="Name" %}
+    <span id="signup_id_error_message" class="errorMsg"></span>
+    {% render_field form.password1 id="signup_password1" name="password1" class="auth-input" type="password" placeholder="Password" %}
+    <span id="signup_password1_error_message" class="errorMsg"></span>
+    {% render_field form.password2 id="signup_password2" name="password2" class="auth-input" type="password" placeholder="Confirm Password" %}
+    <span id="signup_password2_error_message" class="errorMsg"></span>
+
+    <button type="button" id="signup_submit">Sign Up</button>
+</form>

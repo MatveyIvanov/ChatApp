@@ -1,0 +1,13 @@
+{% load widget_tweaks %}
+<form id="signin_form" action="{% url 'auth' %}" method="post">
+    {% csrf_token %}
+    <h1>Sign in</h1>
+
+    {% render_field form.username id="signin_id" name="id" class="auth-input" placeholder="Name" %}
+    <span id="signin_id_error_message" class="errorMsg"></span>
+    {% render_field form.password id="signin_password" name="password" class="auth-input" type="password" placeholder="Password" %}
+    <span id="signin_password_error_message" class="errorMsg"></span>
+
+    <a href="#">Forgot your password?</a>
+    <button type="button" id="signin_submit">Sign In</button>
+</form>

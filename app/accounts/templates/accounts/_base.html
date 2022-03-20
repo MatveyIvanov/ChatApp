@@ -1,0 +1,60 @@
+<!doctype html>
+
+{% load static %}
+{% load widget_tweaks %}
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>{% block title %}Auth{% endblock title %}</title>
+    <meta name="description" content="A simple HTML5 Template for new projects.">
+    <meta name="author" content="SitePoint">
+
+    <meta property="og:title" content="A Basic HTML5 Template">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.sitepoint.com/a-basic-html5-template/">
+    <meta property="og:description" content="A simple HTML5 Template for new projects.">
+    <meta property="og:image" content="image.png">
+
+    <link rel="icon" href="/favicon.ico">
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+    {% block css %}
+        <link rel="stylesheet" href="{% static 'accounts/css/base.css' %}" media="screen">
+    {% endblock css %}
+</head>
+
+<body>
+    {% block content %}
+    <div class="container" id="container">
+        <div class="form-container sign-up-container">
+            {% include 'accounts/signup.html' %}
+        </div>
+        <div class="form-container sign-in-container">
+            {% include 'accounts/signin.html' %}
+        </div>
+        <div class="overlay-container">
+            <div class="overlay">
+                <div class="overlay-panel overlay-left">
+                    <h1>Welcome Back!</h1>
+                    <p>To keep connected with us please login with your personal info</p>
+                    <button class="ghost" id="signIn">Sign In</button>
+                </div>
+                <div class="overlay-panel overlay-right">
+                    <h1>Hello, Friend!</h1>
+                    <p>Enter your personal details and start journey with us</p>
+                    <button class="ghost" id="signUp">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endblock content %}
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    {% block js %}
+    <script src="{% static 'accounts/js/base.js' %}"></script>
+    {% endblock js %}
+</body>
+</html>

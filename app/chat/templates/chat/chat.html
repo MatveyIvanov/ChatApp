@@ -1,0 +1,47 @@
+{% extends 'chat/_base.html' %}
+
+{% load static %}
+
+{% block title %}Chat{% endblock title %}
+
+
+{% block css %}<link rel="stylesheet" href="{% static 'chat/css/chat.css' %}">{% endblock css %}
+
+{% block content %}
+<div class="container-fluid h-100">
+	<div class="row justify-content-center h-100">
+		<div class="col-md-4 col-xl-3 chat"><div class="card mb-sm-3 mb-md-0 contacts_card">
+			<div class="card-header">
+				<div class="input-group">
+					<input id="search" type="text" placeholder="Search..." name="" class="form-control search">
+					<div class="input-group-prepend">
+						<span id="global_search" class="input-group-text search_btn" title="Global search"><i class="fas fa-search"></i></span>
+					</div>
+				</div>
+			</div>
+			<div id="contacts_list" class="card-body contacts_body">
+				{% include 'chat/contacts_list.html' %}
+			</div>
+			<div class="card-footer"></div>
+		</div></div>
+		<div id="chat_window" class="col-md-8 col-xl-6 chat">
+			<div id="card" class="card">
+				{% include 'chat/chat_box.html' %}
+			</div>
+			<div id="card_footer" class="card-footer">
+				<div class="input-group">
+					<div class="input-group-append">
+						<span class="input-group-text attach_btn"><i class="fas fa-paperclip"></i></span>
+					</div>
+					<textarea name="" id="chat-message-input" class="form-control type_msg" placeholder="Type your message..."></textarea>
+					<div class="input-group-append">
+						<span id="chat-message-submit" class="input-group-text send_btn"><i class="fas fa-location-arrow"></i></span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock content %}
+
+{% block js %}<script src="{% static 'chat/js/chat.js' %}"></script>{% endblock js %}

@@ -1,0 +1,18 @@
+/env
+
+
+# Docker
+docker-compose.prod.yml
+Dockerfile.prod
+
+# Environment variables
+.env.dev
+.env.dev.db
+.env.prod
+.env.prod.db
+
+# Environment entrypoint script
+entrypoint.prod.sh
+
+# SQL
+init.sql

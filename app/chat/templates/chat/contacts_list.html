@@ -1,0 +1,26 @@
+{% load static %}
+
+<ui id="contacts_list" class="contacts">
+    <button type="button" id="exit_global_search_btn" class="global_search_btn">Back to contacts</button>
+    {% for contact in contacts %}
+        <li>
+            <div class="d-flex bd-highlight">
+                <div class="img_cont">
+                    <img src="{% static 'chat/img/avatar.png' %}" class="rounded-circle user_img">
+                    {% if contact.status == 1 %}
+                        <span class="online_icon"></span>
+                    {% endif %}
+                </div>
+                <div class="user_info">
+                    <span>{{ contact.id }}</span>
+                    {% if contact.status == 1 %}
+                        <p>{{ contact.id }} is online</p>
+                    {% else %}
+                        <p>{{ contact.id }} is offline</p>
+                    {% endif %}
+                </div>
+            </div>
+        </li>
+    {% endfor %}
+    <button type="button" id="global_search_btn" class="global_search_btn">Try global search</button>
+</ui>
