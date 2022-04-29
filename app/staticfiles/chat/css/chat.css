@@ -19,10 +19,11 @@ body,html{
     margin-bottom: auto;
 }
 .card{
-    height: 500px;
+    height: 60vh;
     border-radius: 15px 15px 0 0 !important;
     background-color: rgba(0,0,0,0.4) !important;
 }
+
 .contacts_body{
     padding:  0.75rem 0 !important;
     overflow-y: auto;
@@ -125,7 +126,10 @@ body,html{
     padding: 5px 10px;
     margin-bottom: 15px !important;
 }
-.active{
+.contacts li:hover {
+    background-color: rgba(0,0,0,0.1);
+}
+.active {
     background-color: rgba(0,0,0,0.3);
 }
 .user_img{
@@ -260,5 +264,94 @@ body,html{
 @media(max-width: 576px){
     .contacts_card{
         margin-bottom: 15px !important;
+    }
+}
+
+
+.user-box {
+    display: flex;
+    height: 50px;
+    position: absolute;
+    top: 0;
+    left: 60%;
+
+    background-color: #7F7FD5;
+
+    padding: 15px;
+
+    vertical-align: middle;
+    align-items: center;
+    border-radius: 0 0 10px 10px;
+
+    font-size: 20px;
+    color: whitesmoke;
+}
+
+.user-box p {
+    align-self: center;
+
+    margin: 0 10px 0 0;
+}
+
+.user-box a {
+    text-decoration: none;
+    color: whitesmoke;
+
+    margin: 0;
+    padding: 10px;
+}
+
+.user-box a:hover {
+    color: black;
+}
+
+
+.new_message {
+    display: none;
+    align-self: center;
+    margin-left: auto;
+    margin-right: 10px;
+}
+
+.new_message .number {
+    width: 30px;
+    height: 30px;
+    line-height: 30px;
+    border-radius: 50%;
+    font-size: 15px;
+    color: #fff;
+    text-align: center;
+    background: rgba(0,0,0,0.5);
+    box-shadow: 0 0 0 rgba(224, 224, 224, 0.4);
+    animation: pulse 2s infinite;
+}
+
+.new_message .number:hover {
+    animation: none;
+}
+
+@-webkit-keyframes pulse {
+    0% {
+        -webkit-box-shadow: 0 0 0 0 rgba(224, 224, 224, 0.4);
+    }
+    70% {
+        -webkit-box-shadow: 0 0 0 10px rgba(204,169,44, 0);
+    }
+    100% {
+        -webkit-box-shadow: 0 0 0 0 rgba(204,169,44, 0);
+    }
+}
+@keyframes pulse {
+    0% {
+        -moz-box-shadow: 0 0 0 0 rgba(224, 224, 224, 0.4);
+        box-shadow: 0 0 0 0 rgba(224, 224, 224, 0.4);
+    }
+    70% {
+        -moz-box-shadow: 0 0 0 10px rgba(204,169,44, 0);
+        box-shadow: 0 0 0 10px rgba(204,169,44, 0);
+    }
+    100% {
+        -moz-box-shadow: 0 0 0 0 rgba(204,169,44, 0);
+        box-shadow: 0 0 0 0 rgba(204,169,44, 0);
     }
 }

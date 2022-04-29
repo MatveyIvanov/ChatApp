@@ -12,7 +12,7 @@ class ChatUserCreationForm(UserCreationForm):
     class Meta:
         model = ChatUser
         fields = ('id', 'password1', 'password2')
-        
+
 
 class ChatUserChangeForm(UserChangeForm):
 

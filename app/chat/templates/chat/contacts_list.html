@@ -2,23 +2,32 @@
 
 <ui id="contacts_list" class="contacts">
     <button type="button" id="exit_global_search_btn" class="global_search_btn">Back to contacts</button>
-    {% for contact in contacts %}
+    {% for room in rooms %}
         <li>
             <div class="d-flex bd-highlight">
                 <div class="img_cont">
                     <img src="{% static 'chat/img/avatar.png' %}" class="rounded-circle user_img">
-                    {% if contact.status == 1 %}
+                    {% if room.contact.status == 1 %}
                         <span class="online_icon"></span>
                     {% endif %}
                 </div>
                 <div class="user_info">
-                    <span>{{ contact.id }}</span>
-                    {% if contact.status == 1 %}
-                        <p>{{ contact.id }} is online</p>
+                    <span>{{ room.contact.id }}</span>
+                    {% if room.contact.status == 1 %}
+                        <p>{{ room.contact.id }} is online</p>
                     {% else %}
-                        <p>{{ contact.id }} is offline</p>
+                        <p>{{ room.contact.id }} is offline</p>
                     {% endif %}
                 </div>
+                {% if room.unread > 0 and room.last_message_sender.id != user.id %}
+                    <div class="new_message" style="display: flex;">
+                        <span class="number">{{ room.unread }}</span>
+                    </div>
+                {% else %}
+                    <div class="new_message" style="display: none;">
+                        <span class="number">0</span>
+                    </div>
+                {% endif %}
             </div>
         </li>
     {% endfor %}

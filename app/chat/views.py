@@ -1,7 +1,4 @@
-from http import HTTPStatus
-from telnetlib import STATUS
 from django.db import IntegrityError
-from django.http import Http404, HttpResponse
 from django.shortcuts import redirect, render
 from django.utils import dateformat
 from django.contrib.auth.decorators import login_required
@@ -14,6 +11,7 @@ from .models import ChatRoom, Message, ChatUser
 def home(request):
     return redirect('chat')
 
+
 @login_required
 def chat(request):
     if request.method == 'GET':
@@ -23,21 +21,30 @@ def chat(request):
             contacts = []
             for room in rooms:
                 if room.user1_id == user:
-                    contacts.append(room.user2_id)
+                    contacts.append({
+                        'contact': room.user2_id,
+                        'unread': room.unread,
+                        'last_message_sender': room.user2_id if room.last_message_sender else room.user1_id
+                    })
                 else:
-                    contacts.append(room.user1_id)
-        except ChatRoom.DoesNotExist as e:
-            print(e)
-        except IntegrityError as e:
-            print(e)
-        except Exception as e:
-            print(e)
+                    contacts.append({
+                        'contact': room.user1_id,
+                        'unread': room.unread,
+                        'last_message_sender': room.user2_id if room.last_message_sender else room.user1_id
+                    })
+        except ChatRoom.DoesNotExist:
+            pass
+        except IntegrityError:
+            pass
+        except Exception:
+            pass
 
         if request.is_ajax():
-            return render(request, 'chat/contacts_list.html', {'contacts': contacts})
-        return render(request, "chat/chat.html", {'contacts': contacts})
-    
+            return render(request, 'chat/contacts_list.html', {'rooms': contacts})
+        return render(request, "chat/chat.html", {'rooms': contacts})
+
     return render(request, "chat/chat.html")
+
 
 @login_required
 def chat_room(request, room_name):
@@ -51,6 +58,11 @@ def chat_room(request, room_name):
 
         try:
             chat = ChatRoom.objects.get(Q(user1_id=user, user2_id=companion_id) | Q(user1_id=companion_id, user2_id=user))
+            last_msg_sender = chat.user2_id.id if chat.last_message_sender else chat.user1_id.id
+            if user.id != last_msg_sender:
+                chat.unread = 0
+                chat.save()
+
             companion = ChatUser.objects.get(id=companion_id)
             messages = Message.objects.filter(chat_id=chat)
             for message in messages:
@@ -59,11 +71,11 @@ def chat_room(request, room_name):
             messages_num = messages.count()
 
             return render(request, 'chat/chat_box.html', {'messages': messages, 'companion': companion, 'messages_num': messages_num})
-        except ChatRoom.DoesNotExist as e:
+        except ChatRoom.DoesNotExist:
             return redirect('chat')
-        except IntegrityError as e:
+        except IntegrityError:
             return redirect('chat')
-        except Exception as e:
+        except Exception:
             return redirect('chat')
 
     if request.method == 'GET':
@@ -76,7 +88,11 @@ def chat_room(request, room_name):
 
         try:
             chat = ChatRoom.objects.get(Q(user1_id=user, user2_id=companion_id) | Q(user1_id=companion_id, user2_id=user))
-            print(f"CHAT: {chat}")
+            last_msg_sender = chat.user2_id.id if chat.last_message_sender else chat.user1_id.id
+            if user.id != last_msg_sender:
+                chat.unread = 0
+                chat.save()
+
             messages = Message.objects.filter(chat_id=chat)
             for message in messages:
                 message.send_time = dateformat.format(message.send_time, 'Y-m-d H:i')
@@ -84,26 +100,34 @@ def chat_room(request, room_name):
             contacts = []
             for room in rooms:
                 if room.user1_id == user:
-                    contacts.append(room.user2_id)
+                    contacts.append({
+                        'contact': room.user2_id,
+                        'unread': room.unread,
+                        'last_message_sender': room.user2_id if room.last_message_sender else room.user1_id
+                    })
                 else:
-                    contacts.append(room.user1_id)
+                    contacts.append({
+                        'contact': room.user1_id,
+                        'unread': room.unread,
+                        'last_message_sender': room.user2_id if room.last_message_sender else room.user1_id
+                    })
 
             messages_num = messages.count()
 
             return render(request, 'chat/chat.html', {
                 'room_name': room_name,
                 'messages': messages,
-                'contacts': contacts,
+                'rooms': contacts,
                 'companion': companion_id,
                 'messages_num': messages_num
             })
-        except ChatRoom.DoesNotExist as e:
+        except ChatRoom.DoesNotExist:
             return redirect('chat')
-        except IntegrityError as e:
+        except IntegrityError:
             return redirect('chat')
-        except Exception as e:
+        except Exception:
             return redirect('chat')
-    
+
     return render(request, 'chat/chat.html', {'room_name': room_name})
 
 
@@ -113,11 +137,11 @@ def global_search(request, room_name=None):
         try:
             users = ChatUser.objects.filter(Q(id__icontains=substr) & ~Q(id=request.user.id))
             return render(request, 'chat/contacts_list.html', {'contacts': users})
-        except ChatUser.DoesNotExist as e:
+        except ChatUser.DoesNotExist:
             return redirect('chat')
-        except IntegrityError as e:
+        except IntegrityError:
             return redirect('chat')
-        except Exception as e:
+        except Exception:
             return redirect('chat')
 
     return redirect('chat')

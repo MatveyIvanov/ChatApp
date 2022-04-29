@@ -15,6 +15,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
         self.user_id = self.scope['user']
         self.room_name = self.scope['url_route']['kwargs']['room_name']
         self.new_chat = False
+        self.new_chat_has_messages = True
 
         splt = self.room_name.split('-')
         if len(splt) == 3:
@@ -23,16 +24,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
         else:
             temp = sorted(splt)
 
-        self.room_group_name = 'chat_%s' % (temp[0] + temp[1])
 
         if temp[0] == str(self.user_id):
             self.companion_id = temp[1]
         else:
             self.companion_id = temp[0]
-
         self.companion_id = self.companion_id.replace('_', ' ')
 
+        self.room_group_name = f'chat_{temp[0] + temp[1]}'
+
         self.user = await self.get_user()
+        self.companion = await self.get_companion()
         if self.new_chat:
             self.chat = await self.create_chat()
             self.new_chat_has_messages = False
@@ -44,7 +46,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.room_group_name,
             self.channel_name
         )
-        print("CREATED")
+
         await self.accept()
 
     @database_sync_to_async
@@ -92,6 +94,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
         except Exception as e:
             print(e)
 
+    @database_sync_to_async
+    def get_companion(self):
+        try:
+            return ChatUser.objects.get(id=self.companion_id)
+        except ChatUser.DoesNotExist as e:
+            print(e)
+        except IntegrityError as e:
+            print(e)
+        except Exception as e:
+            print(e)
+
     async def disconnect(self, close_code):
         if not self.new_chat_has_messages:
             await self.delete_chat()
@@ -100,6 +113,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             self.channel_name
         )
 
+
     async def receive(self, text_data):
         text_data_json = json.loads(text_data)
         message = text_data_json['message']
@@ -107,11 +121,15 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
         self.new_chat_has_messages = True
 
+        message_object = await self.save_message(message, sender)
+        time = dateformat.format(message_object.send_time, 'm-d H:i')
+
         await self.channel_layer.group_send(
             self.room_group_name,
             {
-                'type': 'chat_message',
+                'type': 'chat.message',
                 'message': message,
+                'time': time,
                 'sender': sender
             }
         )
@@ -119,11 +137,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
     async def chat_message(self, event):
         message = event['message']
         sender = event['sender']
-
-        message_object = await self.save_message(message)
-        time = dateformat.format(message_object.send_time, 'm-d H:i')
-
-        self.new_chat_has_messages = True
+        time = event['time']
 
         await self.send(text_data=json.dumps({
             'message': message,
@@ -132,11 +146,18 @@ class ChatConsumer(AsyncWebsocketConsumer):
         }))
 
     @database_sync_to_async
-    def save_message(self, msg):
+    def save_message(self, msg, sender):
         try:
-            message = Message(chat_id=self.chat, user_id=self.user, message=msg)
+            user = self.user if self.user.id == sender else self.companion
+            message = Message(chat_id=self.chat, user_id=user, message=msg)
             message.save()
             self.chat.last_message = timezone.now()
+            last_msg_sender = self.chat.user2_id.id if self.chat.last_message_sender else self.chat.user1_id.id
+            if last_msg_sender == sender:
+                self.chat.unread += 1
+            else:
+                self.chat.unread = 1
+                self.chat.last_message_sender = True if self.chat.user2_id.id == sender else False
             self.chat.save()
             return message
         except Message.DoesNotExist as e:
@@ -145,3 +166,47 @@ class ChatConsumer(AsyncWebsocketConsumer):
             print(e)
         except Exception as e:
             print(e)
+
+
+class NotificationConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        self.user_id = self.scope['user']
+        
+        self.notification_group_name = f'notifications_{self.user_id}'
+
+        await self.channel_layer.group_add(
+            self.notification_group_name,
+            self.channel_name
+        )
+
+        await self.accept()
+
+
+    async def disconnect(self, close_code):
+        await self.channel_layer.group_discard(
+            self.notification_group_name,
+            self.channel_name
+        )
+
+    async def receive(self, text_data):
+        text_data_json = json.loads(text_data)
+        sender = text_data_json['sender']
+        reciever = text_data_json['reciever']
+
+        await self.channel_layer.group_send(
+            f'notifications_{reciever}',
+            {
+                'type': 'new.message',
+                'sender': sender,
+                'reciever': reciever
+            }
+        )
+
+    async def new_message(self, event):
+        sender = event['sender']
+        reciever = event['reciever']
+
+        await self.send(text_data=json.dumps({
+            'sender': sender,
+            'reciever': reciever
+        }))

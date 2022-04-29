@@ -16,11 +16,11 @@ class ChatUser(AbstractBaseUser, PermissionsMixin):
     status = models.IntegerField(default=0)
 
     social_media = models.URLField()
-    #profile_image = models.ImageField(verbose_name='profile image')
+    # profile_image = models.ImageField(verbose_name='profile image')
 
     USERNAME_FIELD = 'id'
     EMAIL_FIELD = 'email'
-    
+
     objects = ChatUserManager()
 
     def __str__(self):

@@ -32,14 +32,13 @@
 </head>
 <body>
   {% if user.is_authenticated %}
-    <h1>Hello {{ user.id }}</h1>
-    <div id="user_id">{{ user.id }}</div>
-    <a href="{% url 'logout' %}">Log Out</a>
+    <div class="user-box">
+      <p id="user_id">{{ user.id }}</p>
+      <a href="{% url 'logout' %}">Log Out</a>
+    </div>
   {% else %}
     <a href="{% url 'auth' %}">Sign In or Create an Account</a>
   {% endif %}
-  <br>
-  <br>
   {% block content %}
   {% endblock %}
   {% block js %}

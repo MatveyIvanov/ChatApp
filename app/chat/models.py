@@ -9,6 +9,8 @@ class ChatRoom(models.Model):
     user2_id = models.ForeignKey(ChatUser, on_delete=models.CASCADE, related_name='%(class)s_user2')
 
     last_message = models.DateTimeField(default=timezone.now())
+    unread = models.IntegerField(default=0)
+    last_message_sender = models.BooleanField(null=True)
 
     def __str__(self) -> str:
         return f'{self.user1_id}, {self.user2_id}'

@@ -1,5 +1,5 @@
 from django.utils import timezone
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import redirect, render
 from django.contrib.auth import login, authenticate, logout as django_logout
 from django.contrib.auth.decorators import login_required
@@ -9,12 +9,17 @@ from .forms import ChatUserCreationForm, ChatUserAuthenticationForm
 from .models import ChatUser
 
 
-USER_DOES_NOT_EXIST = lambda id: f'User with name {id} does not exist'
-USER_ALREADY_EXISTS = lambda id: f'User with name {id} already exists'
 INCORRECT_PASSWORD = 'Wrong password. Try again'
 PASSWORDS_DONT_MATCH = 'Passwords don\'t match. Try again'
 UNKNOWN_ERROR = 'Weak password. Try again'
 
+
+def USER_DOES_NOT_EXIST(id):
+    return f'User with name {id} does not exist'
+
+
+def USER_ALREADY_EXISTS(id):
+    return f'User with name {id} already exists'
 
 
 def auth(request):
@@ -58,7 +63,7 @@ def auth(request):
             id = request.POST.get('id')
             password1 = request.POST.get('password1')
             password2 = request.POST.get('password2')
-            
+
             if ChatUser.objects.filter(id=id).exists():
                 return JsonResponse({
                     'error_message': USER_ALREADY_EXISTS(id),
@@ -110,7 +115,7 @@ def auth(request):
                         'error_message': UNKNOWN_ERROR,
                         'type': 'id',
                     }, status=404)
-            
+
             id = request.POST.get('username')
             password = request.POST.get('password')
             try:
@@ -148,8 +153,9 @@ def auth(request):
             form = ChatUserCreationForm()
         else:
             form = ChatUserAuthenticationForm()
-    print("ZAEBALONAHYI")
+
     return render(request, 'accounts/_base.html', {'form': form})
+
 
 @login_required
 def logout(request):
@@ -164,5 +170,6 @@ def logout(request):
         redirect('auth')
     except Exception:
         redirect('auth')
+
     django_logout(request)
     return redirect('home')

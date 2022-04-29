@@ -3,9 +3,11 @@ const user_id = document.querySelector('#user_id').innerHTML;
 
 var new_chat = false;
 var chatSocketCopy = null;
+var notificationSocketCopy = null;
+var companion_id = null;
 
 function initChatSocket(companion_id) {
-    const roomName = user_id + '-' + companion_id + (new_chat ? '-new':'');
+    const roomName = user_id + '-' + companion_id + (new_chat ? '-new' : '');
     const chatSocket = new WebSocket(
         'ws://'
         + window.location.host
@@ -15,24 +17,26 @@ function initChatSocket(companion_id) {
     chatSocketCopy = chatSocket;
     console.log("Opened: " + chatSocket.url);
 
-    chatSocket.onopen = function() {
+    companion_id = companion_id;
+
+    chatSocket.onopen = function () {
         $.ajax({
             url: '',
             type: 'get',
-            success: function(data) {
+            success: function (data) {
                 $('#card').html(data);
                 chat_box = document.querySelector('#chat_box');
                 chat_box.scrollTop = chat_box.scrollHeight;
             },
-            error: function(e) {
+            error: function (e) {
                 console.log(e);
             }
         });
     }
 
-    chatSocket.onmessage = function(e) {
+    chatSocket.onmessage = function (e) {
         const data = JSON.parse(e.data);
-    
+
         new_msg = document.createElement('div');
         inner_div = document.createElement('div');
 
@@ -43,10 +47,10 @@ function initChatSocket(companion_id) {
         time_span.innerHTML = data.time;
 
         inner_div.appendChild(time_span);
-    
+
         img_div = document.createElement('div');
         img = document.createElement('img');
-        img.src = "chat/img/avatar.png";
+        img.src = "img/avatar.png";
         img.class = "rounded-circle user_img_msg";
 
         img_div.appendChild(img);
@@ -63,29 +67,48 @@ function initChatSocket(companion_id) {
             new_msg.appendChild(img_div);
             new_msg.appendChild(inner_div);
         }
-    
+
         document.getElementsByClassName('card-body msg_card_body')[0].appendChild(new_msg);
-    
+
         chat_box = document.querySelector('#chat_box');
         chat_box.scrollTop = chat_box.scrollHeight;
+
+        msg_num = document.querySelector('#num_of_messages');
+        msg_num.innerHTML = (parseInt(msg_num.innerHTML) + 1).toString() + ' Messages'
+
+        $.ajax({
+            url: 'chat',
+            type: 'get',
+            success: function (data) {
+                $('#contacts_list').html(data);
+
+                new_chat = false;
+                updateContacts();
+                setActive();
+            },
+        });
+
+        notificationSocketCopy.send(JSON.stringify({
+            'sender': user_id,
+            'reciever': companion_id
+        }));
     };
-    
-    chatSocket.onclose = function(e) {
+
+    chatSocket.onclose = function (e) {
         console.log("Closed: " + this.url);
     };
-    
+
     document.querySelector('#chat-message-input').focus();
-    document.querySelector('#chat-message-input').onkeyup = function(e) {
+    document.querySelector('#chat-message-input').onkeyup = function (e) {
         if (e.keyCode === 13) {  // enter, return
             document.querySelector('#chat-message-submit').click();
         }
     };
-    
-    document.querySelector('#chat-message-submit').onclick = function(e) {
+
+    document.querySelector('#chat-message-submit').onclick = function (e) {
         const messageInputDom = document.querySelector('#chat-message-input');
         const message = messageInputDom.value;
         if (message == "") {
-            console.log("Empty");
             return
         }
         chatSocket.send(JSON.stringify({
@@ -96,26 +119,70 @@ function initChatSocket(companion_id) {
     };
 }
 
-window.onbeforeunload = function() {
-    if (chatSocketCopy) {
-        chatSocketCopy.onclose = function () {}; // disable onclose handler first
-        chatSocketCopy.close();
-    }
-};
+function initNotificationSocket() {
+    const notificationSocket = new WebSocket(
+        'ws://'
+        + window.location.host
+        + '/ws/'
+        + user_id
+        + '-notifications'
+    );
+    console.log("Opened: " + notificationSocket.url);
+    notificationSocketCopy = notificationSocket;
 
-window.onload = function() {
+    // notificationSocket.onopen = function() {
+
+    // }
+
+    notificationSocket.onmessage = function (e) {
+        const data = JSON.parse(e.data);
+        if (data.reciever != user_id || data.sender == companion_id)
+            return;
+        sender = data.sender;
+        $.ajax({
+            url: 'chat',
+            type: 'get',
+            success: function (data) {
+                $('#contacts_list').html(data);
+
+                new_chat = false;
+                updateContacts();
+                setActive();
+
+                // spans = document.querySelector('#contacts_list').getElementsByTagName('span');
+                // for (i = 0; i < spans.length; i++) {
+                //     if (spans[i].textContent == sender) {
+                //         span = spans[i];
+                //         break;
+                //     }
+                // }
+
+                // msg_div = span.closest('li').querySelector('.new_message');
+                // msg_div.style.display = 'flex';
+                // msg_div.children[0].innerHTML = (parseInt(msg_div.children[0].innerHTML) + 1).toString();
+            },
+        });
+    };
+
+    notificationSocket.onclose = function (e) {
+        console.log("Closed: " + this.url);
+    };
+}
+
+window.onload = function () {
+    document.querySelector('#global_search_btn').style.display = 'none';
+
     var chat_window = document.querySelector('#chat_window');
     if (window.location.pathname.match(/\/chat\/[\w]+/g) == null) {
         chat_window.style.visibility = 'hidden';
-        contacts = document.getElementsByClassName('contacts')[0].children
-        if (contacts == null || contacts.length == 0 || contacts[0].tagName != 'LI') {
-            console.log('asd');
+        contacts = document.getElementsByTagName('li');
+        if (contacts == null || contacts.length == 0) {
             document.querySelector('#global_search_btn').style.display = 'inline-block';
         }
     }
     else {
         chat_window.style.visibility = 'visible';
-        
+
         setActive();
 
         chat_box = document.querySelector('#chat_box');
@@ -123,7 +190,16 @@ window.onload = function() {
 
         initChatSocket(companion_id);
     }
+
+    initNotificationSocket();
 }
+
+// window.onbeforeunload = function () {
+//     $.ajax({
+//         url: 'accounts/logout',
+//         type: 'put',
+//     });
+// }
 
 function setActive() {
     companion_id = $('#chat_window_user_info').text().split(' ');
@@ -137,13 +213,14 @@ function setActive() {
     }
     li = span.closest('li');
     li.className = 'active';
+    li.querySelector('.new_message').style.display = 'none';
 
     current_active_room = li;
 }
 
 
-$(document).ready(function(){
-    $('#action_menu_btn').click(function(){
+$(document).ready(function () {
+    $('#action_menu_btn').click(function () {
         $('.action_menu').toggle();
     });
 });
@@ -188,6 +265,10 @@ function contactClick() {
     this.className = 'active';
     current_active_room = this;
 
+    msg_div = this.querySelector('.new_message');
+    msg_div.style.display = 'none';
+    msg_div.children[0].innerHTML = '0';
+
     if (chatSocketCopy) {
         chatSocketCopy.close();
     }
@@ -200,9 +281,9 @@ function contactClick() {
 /* SEARCH */
 
 
-document.querySelector('#search').oninput = function() {
+document.querySelector('#search').oninput = function () {
     var contacts = document.querySelector('#contacts_list').getElementsByTagName('li');
-    for (i=0; i < contacts.length; i++) {
+    for (i = 0; i < contacts.length; i++) {
         id = contacts[i].querySelector('.user_info').querySelector('span').innerHTML;
         if (id.toLowerCase().includes(this.value.toLowerCase())) {
             contacts[i].style.display = "list-item";
@@ -221,11 +302,11 @@ document.querySelector('#search').oninput = function() {
     }
 }
 
-document.querySelector('#global_search_btn').onclick = function() {
+document.querySelector('#global_search_btn').onclick = function () {
     document.querySelector('#global_search').click();
 }
 
-document.querySelector('#global_search').onclick = function() {
+document.querySelector('#global_search').onclick = function () {
     substr = document.querySelector('#search').value;
     if (substr == '')
         return
@@ -239,8 +320,8 @@ document.querySelector('#global_search').onclick = function() {
     $.ajax({
         url: 'chat/global_search',
         type: 'get',
-        data: {'search_substring': substr},
-        success: function(data) {
+        data: { 'search_substring': substr },
+        success: function (data) {
             $('#contacts_list').html(data);
 
             egs_btn = document.querySelector('#exit_global_search_btn');
@@ -265,7 +346,7 @@ function exitGlobalSearch() {
     $.ajax({
         url: 'chat',
         type: 'get',
-        success: function(data) {
+        success: function (data) {
             $('#contacts_list').html(data);
 
             new_chat = false;
